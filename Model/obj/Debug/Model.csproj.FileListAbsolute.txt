@@ -1,0 +1,11 @@
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\Model.dll
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\Model.pdb
+E:\vs2013\MeetManagerSystem\Model\obj\Debug\Model.dll
+E:\vs2013\MeetManagerSystem\Model\obj\Debug\Model.pdb
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\Model.dll.config
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\EntityFramework.dll
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\EntityFramework.SqlServer.dll
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\EntityFramework.xml
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\EntityFramework.SqlServer.xml
+E:\vs2013\MeetManagerSystem\Model\bin\Debug\Newtonsoft.Json.dll
+E:\vs2013\MeetManagerSystem\Model\obj\Debug\Model.csprojResolveAssemblyReference.cache

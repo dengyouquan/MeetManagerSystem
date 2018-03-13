@@ -1,0 +1,157 @@
+﻿
+@{
+    Layout = null;
+}
+@using Microsoft.AspNet.Identity
+@using System.Web.Security
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+@Styles.Render("~/Content/date")
+@Scripts.Render("~/bundles/date")
+@Scripts.Render("~/bundles/ajax")
+@Styles.Render("~/Content/KinderEditor")
+@Scripts.Render("~/bundles/KinderEditor")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+    <title>ShowApply</title>
+    <script type="text/javascript">
+        $(function () {
+            var userId = $("#userId").text();
+            $("#Applyer").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+            bindFileUpload();
+            $('.input_cxcalendar').each(function () {
+                var a = new Calendar({
+                    targetCls: $(this),
+                    type: 'yyyy-mm-dd HH:MM:SS',
+                    wday: 2
+                }, function (val) {
+                    console.log(val);
+                });
+            });
+            //alert(userId);
+        });
+        KindEditor.ready(function (K) {
+            var editor1 = K.create('#MsgContent', {
+                cssPath: '/KinderEditor/plugins/code/prettify.css',
+                uploadJson: '/KinderEditor/asp.net/upload_json.ashx',
+                fileManagerJson: '/KinderEditor/asp.net/file_manager_json.ashx',
+                allowFileManager: true,
+                afterBlur: function () { this.sync(); },//注意这里（异步提交时需要同步）
+                afterCreate: function () {
+                    var self = this;
+                    self.sync();//把富文本编辑器的内容放到  文本域里面去。
+
+                }
+            });
+            prettyPrint();//注意要调用该方法.
+        });
+        function bindFileUpload() {
+        
+            $("#btnFileUp").click(function () {
+                if ($("#imgIcon").val() == "") {
+                    $.messager.alert("提示", "请选择文件");
+                    return;
+                }
+                //alert("bindFileUpload");
+                $("#addForm").ajaxSubmit({
+                    type: 'post',
+                    url: '/Meet/FileUpload',
+                    success: function (data) {
+                        //alert("success");
+                        var serverData = data.split(':');
+                        if (serverData[0] == "ok") {
+                            //alert(serverData[1]);
+                            $("#fileUpImage").attr("value", serverData[1]);//将服务端返回的图片路径赋给隐藏域
+                            $("#showImage").append("<span>上传成功</span>");
+                        } else {
+                            $.messager.alert("提示", "文件上传错误!");
+                        }
+                    }
+                });
+            });
+            return false;
+        }
+        //提交表单
+        function SubForm(id) {
+            //alert("meetRoom:" + id);
+            $("#Other").val(id);
+            $("#addForm").submit();
+        }
+        function afterApply(data) {
+            window.parent.afterApply(data);
+        }
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div> 
+        @using (Ajax.BeginForm("Apply", "Meet", new AjaxOptions() { HttpMethod = "post", OnSuccess = "afterApply", OnComplete = "afterApply", OnFailure = "afterApply" }, new { id = "addForm", enctype = "multipart/form-data" }))
+        {
+            if (ViewData["meet"] == null)
+            {
+                <table>
+                <tr><td>会议标题</td><td><input type="text" name="Title" /></td></tr>
+                <tr><td>会议类型</td><td><input type="text" name="Type" /></td></tr>
+                <tr><td>主持人</td><td><input type="text" name="HostPeople" /></td></tr>
+                <tr><td>预算</td><td><input type="text" name="Budget" /></td></tr>
+                <tr><td>地址</td><td><input type="text" name="Address" /></td></tr>
+                <tr><td>开始时间</td><td><input type="text" name="StartTime" class="input_cxcalendar" style="width:200px;" /></td></tr>
+                <tr><td>结束时间</td><td><input type="text" name="EndTime" class="input_cxcalendar" style="width:200px;" /></td></tr>
+                <tr>
+                    <td>上传附件</td>
+                    <td>
+                        <input type="file" name="fileUp" id="imgIcon" />
+                        <input type="button" value="上传附件" id="btnFileUp" />
+                        <input type="hidden" id="fileUpImage" name="File" />
+                        <input type="hidden" id="Applyer" name="ApplyPeople" />
+                        <div id="showImage">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>内容</td>
+                    <td>
+                        <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Content"></textarea>
+                        <input type="hidden" id="Other" name="Other" />
+                    </td>
+
+                </tr>
+            </table>
+            }
+            else
+            {
+                <table>
+                <tr><td>会议标题</td><td><input type="text" name="Title"  value="@ViewData["Title"]" /></td></tr>
+                <tr><td>会议类型</td><td><input type="text" name="Type" value="@ViewData["Type"]" /></td></tr>
+                <tr><td>主持人</td><td><input type="text" name="HostPeople" value="@ViewData["HostPeople"]" /></td></tr>
+                <tr><td>预算</td><td><input type="text" name="Budget" value="@ViewData["Budget"]" /></td></tr>
+                <tr><td>地址</td><td><input type="text" name="Address" value="@ViewData["Address"]" /></td></tr>
+                <tr><td>开始时间</td><td><input type="text" name="StartTime" value="@ViewData["StartTime"]" /></td></tr>
+                <tr><td>结束时间</td><td><input type="text" name="EndTime" value="@ViewData["EndTime"]" /></td></tr>
+                <tr>
+                    <td>内容</td>
+                    <td>
+                        <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Content" >@ViewData["Content"]</textarea>
+                        <input type="hidden" id="MeetId" name="MeetId" value="@ViewData["MeetId"].ToString()" />
+                        <input type="hidden" id="ApplyPeople" name="ApplyPeople" value="@ViewData["ApplyPeople"]" />
+                        <input type="hidden" name="Other" value="@ViewData["Other"]" />
+                    </td>
+                </tr>
+            </table>
+            }
+            
+        }
+    </div>
+</body>
+</html>

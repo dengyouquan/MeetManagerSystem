@@ -1,0 +1,302 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Common
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MeetApply</title>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".memoDiv").css("display", "none");
+            $(".memo").click(function () {
+                //alert("addInfo");
+                MemoInfo($(this).attr("ids"));
+            });
+
+            $(".detailDiv").css("display", "none");
+            $(".detail").click(function () {
+                showDetail($(this).attr("ids"));
+            });
+            $(".memodetailDiv").css("display", "none");
+            $(".memodetail").click(function () {
+                showMemoDetail($(this).attr("ids"));
+            });
+
+            $(".delete").click(function () {
+                deleteInfo($(this).attr("ids"), $(this));
+            });
+            $(".update").click(function () {
+                updateMemoInfo($(this).attr("ids"));
+            });
+        });
+
+        function updateMemoInfo(id) {
+            $("#memoFrame").attr("src", "/Meet/ShowMemo?id=" + id);
+            $(".memoDiv").css("display", "block");
+            $(".memoDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议纪要",
+                width: 700,
+                height: 400,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        //调用子窗体中的方法
+                        var childWindow = $("#memoFrame")[0].contentWindow;
+                        childWindow.SubForm();
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('.memoDiv').dialog("close", true);
+                    }
+                }]
+            });
+        }
+
+        function deleteInfo(id, control) {
+            $.messager.confirm("提示", "确定要删除该纪要吗？", function (r) {
+                if (r) {
+                    //删除
+                    $.post("/Meet/DeleteMsg", { "id": id }, function (data) {
+                        if (data == "ok") {
+                            $(control).parent().parent().remove();
+                            $.messager.show({
+                                title: '提示',
+                                msg: '删除成功',
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.alert("提示", "删除失败", "info");
+                        }
+                    });
+
+                } else {
+
+                }
+            });
+        }
+
+        function MemoInfo(id) {
+            $("#memoFrame").attr("src", "/Meet/ShowMemo?id=" + id);
+            $(".memoDiv").css("display", "block");
+            $(".memoDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议纪要",
+                width: 700,
+                height: 400,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        //调用子窗体中的方法
+                        var childWindow = $("#memoFrame")[0].contentWindow;
+                        childWindow.SubForm();
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('.memoDiv').dialog("close", true);
+                    }
+                }]
+            });
+        }
+
+        function showDetail(id) {
+            $.post("/Meet/MeetDetail", { "id": id }, function (data) {
+                $("#Title").text("");
+                $("#Type").text("");
+                $("#Content").html("");
+                $("#StartTime").text("");
+                $("#EndTime").text("");
+                $("#Address").text("");
+                $("#IsEnd").html("");
+
+
+                $("#Title").text(data.Title);
+                $("#Type").text(data.Type);
+                $("#Content").html(data.Content);
+                $("#StartTime").text(ChangeDateFormat(data.StartTime));
+                $("#EndTime").text(ChangeDateFormat(data.EndTime));
+                $("#Address").text(data.Address);
+                $("#IsEnd").html(data.IsEnd == false ? "未结束" : "结束");
+            });
+            $(".detailDiv").css("display", "block");
+            $(".detailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.detailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        function showMemoDetail(id) {
+            $.post("/Meet/MeetMemoDetail", { "id": id }, function (data) {
+
+                $("#Name").text("");
+                $("#MemoContent").html("");
+                $("#Recorder").text("");
+
+                $("#Name").text(data.Name);
+                $("#MemoContent").html(data.Content);
+                $("#Recorder").text(data.Recorder);
+            });
+            $(".memodetailDiv").css("display", "block");
+            $(".memodetailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "纪要详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.memodetailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        //添加完成以后执行该方法
+        function afterMemo(serverData) {
+            $('.memoDiv').dialog('close', true);
+            $.messager.show({
+                title: '提示',
+                msg: '纪要完毕',
+                showType: 'show'
+            });
+            location.reload();
+        }
+
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+    </script>
+</head>
+<body>
+    <div>
+        
+        <p style="font-size:large">已纪要会议</p>
+        @if (ViewData["meetsok"] == null || ((List<Meet>)ViewData["meetsok"]).Count == 0)
+        {
+            <p>暂无任何已纪要会议</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议标题</th>
+                        <th>会议类型</th>
+                        @*<th>会议内容</th>*@
+                        <th>会议开始时间</th>
+                        <th>会议地址</th>
+                        <th>会议详情</th>
+                        <th>纪要详情</th>
+                        <th>归档结果</th>
+                        <th>删除纪要</th>
+                        <th>更新纪要</th>
+                    </tr>
+                    @foreach (Meet m in (List<Meet>)ViewData["meetsok"])
+                    {
+                        <tr>
+                            <td>@m.Title</td>
+                            <td>@m.Type</td>
+                            @*<td>@m.Content</td>*@
+                            <td>@m.StartTime</td>
+                            <td>@m.Address</td>
+                            <td><a href="#" class="detail" ids="@m.MeetId">会议详情</a></td>
+                            <td><a href="#" class="memodetail" ids="@m.MeetId">纪要详情</a></td>
+                            @if (@m.Status == 2)
+                            {
+                                <td>未归档</td>
+                                <td><a href="#" class="delete" ids="@m.MeetId">删除纪要</a></td>
+                                <td><a href="#" class="update" ids="@m.MeetId">更新纪要</a></td>
+                            }
+                            else if (m.Status == 3)
+                            {
+                                <td>归档未通过</td>
+                                <td>删除纪要</td>
+                                <td>更新纪要</td>
+                            }
+                            else if (m.Status == 4)
+                            {
+                                <td>归档通过</td>
+                                <td>删除纪要</td>
+                                <td>更新纪要</td>
+                            }
+                        </tr>
+                    }
+                </table>
+                <p class="page_nav">
+                    @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"], (string)ViewData["id"]))
+                </p>
+            </div>
+        }
+    </div>
+    <!--显示详细内容--->
+    <div class="memodetailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>ID</td><td><span id="Recorder"></span></td></tr>
+            <tr><td>标题</td><td><span id="Name"></span></td></tr>
+            <tr><td>内容</td><td><span id="MemoContent"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+    <!--显示详细内容--->
+    <div class="detailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>标题</td><td><span id="Title"></span></td></tr>
+            <tr><td>类型</td><td><span id="Type"></span></td></tr>
+            <tr><td>内容</td><td><span id="Content"></span></td></tr>
+            <tr><td>开始时间</td><td><span id="StartTime"></span></td></tr>
+            <tr><td>结束时间</td><td><span id="EndTime"></span></td></tr>
+            <tr><td>地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>是否结束</td><td><span id="IsEnd"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+    <!--纪要内容--->
+    <div class="memoDiv" style="overflow:hidden;">
+        <iframe id="memoFrame" frameborder="0" width="100%" height="100%" scrolling="auto" src="" />
+    </div>
+    <!--纪要内容结束--->
+
+</body>
+</html>

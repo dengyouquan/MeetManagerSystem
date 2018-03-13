@@ -1,0 +1,270 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Common
+@using Microsoft.AspNet.Identity
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MeetRoom</title>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".addDiv").css("display", "none");
+            $(".addInfo").click(function () {
+                //alert("addInfo");
+                addInfo();
+            });
+            $(".detailDiv").css("display", "none");
+            $(".detail").click(function () {
+                showDetail($(this).attr("ids"));
+            });
+
+            $(".delete").click(function () {
+                deleteInfo($(this).attr("ids"), $(this));
+            });
+            $(".update").click(function () {
+                updateInfo($(this).attr("ids"));
+            });
+            var userId = $("#userId").text();
+            $("#ApplyPeople").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+        });
+
+        function addInfo() {
+            $("#addFrame").attr("src", "/MeetRoom/AddMeetRoom");
+            $(".addDiv").css("display", "block");
+            $(".addDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议室添加",
+                width: 700,
+                height: 400,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        //调用子窗体中的方法
+                        var childWindow = $("#addFrame")[0].contentWindow;
+                        childWindow.SubForm();
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('.addDiv').dialog("close", true);
+                    }
+                }]
+            });
+        }
+
+        function updateInfo(id) {
+            $("#addFrame").attr("src", "/MeetRoom/AddMeetRoom?id="+id);
+            $(".addDiv").css("display", "block");
+            $(".addDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议室更新",
+                width: 700,
+                height: 400,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        //调用子窗体中的方法
+                        var childWindow = $("#addFrame")[0].contentWindow;
+                        childWindow.SubForm();
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('.addDiv').dialog("close", true);
+                    }
+                }]
+            });
+        }
+
+        //添加完成以后执行该方法
+        function afterAddRoom(serverData) {
+            $('.addDiv').dialog('close', true);
+            $.messager.show({
+                title: '提示',
+                msg: '添加成功',
+                showType: 'show'
+            });
+            location.reload();
+        }
+
+        function deleteInfo(id, control) {
+            $.messager.confirm("提示", "确定要删除该会议室吗？", function (r) {
+                if (r) {
+                    //删除
+                    $.post("/MeetRoom/Delete", { "id": id }, function (data) {
+                        if (data == "ok") {
+                            $(control).parent().parent().remove();
+                            $.messager.show({
+                                title: '提示',
+                                msg: '删除成功',
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.alert("提示", "删除失败", "info");
+                        }
+                    });
+
+                } else {
+
+                }
+            });
+        }
+
+        function showDetail(id) {
+            $.post("/MeetRoom/MeetRoomDetail", { "id": id }, function (data) {
+                $("#Name").text("");
+                $("#HoldPerson").text("");
+                $("#Address").text("");
+                $("#Status").text("");
+                $("#Picture").attr("src","");
+                $("#Describe").html("");
+
+
+                $("#Name").text(data.Name);
+                $("#HoldPerson").text(data.HoldPerson);
+                $("#Address").text(data.Address);
+                $("#Describe").html(data.Describe);
+                
+                $("#Status").text(data.Status == 0 ? "未使用" : (data.Status == 1 ? "已预约" : "已使用"));
+                $("#Picture").attr("src", data.Picture);
+            });
+            $(".detailDiv").css("display", "block");
+            $(".detailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议室详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.detailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @using (Html.BeginForm())
+        {
+            <p>
+                @*type:@Html.DropDownList("meetType","All")*@
+                Title or Content:@Html.TextBox("searchString")<br />
+                @*Title or Content:<input type="text" value="@ViewData["searchString"]" />*@
+                <input type="submit" value="搜索" />
+            </p>
+        }
+    </div>
+    <div>
+        <a href="#" class="addInfo">会议室添加</a><br /><br />
+        <div style="font-size:large">会议室管理</div><br /><br />
+        @if (ViewData["meetRooms"] == null || ((List<MeetRoom>)ViewData["meetRooms"]).Count == 0)
+        {
+            <p>暂无任何会议室，去添加一个吧</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议室名</th>
+                        <th>容纳人数</th>
+                        <th>会议室地址</th>
+                        <th>状态</th>
+                        <th>详细</th>
+                        <th>删除</th>
+                        <th>更新</th>
+                    </tr>
+                    @foreach (MeetRoom m in (List<MeetRoom>)ViewData["meetRooms"])
+                    {
+                        <tr>
+                            <td>@m.Name</td>
+                            <td>@m.HoldPerson</td>
+                            <td>@m.Address</td>
+                            @if (m.Status == 0)
+                            {
+                                <td>未使用</td>
+                            }
+                            else if (m.Status == 1)
+                            {
+                                <td>已预约</td>
+                            }
+                            else if (m.Status == 2)
+                            {
+                                <td>未预约</td>
+                            }
+                            <td><a href="#" class="detail" ids="@m.MeetRoomId">详细</a></td>
+                            <td><a href="#" class="delete" ids="@m.MeetRoomId">删除</a></td>
+                            <td><a href="#" class="update" ids="@m.MeetRoomId">更新</a></td>
+
+                        </tr>
+                    }
+                </table>
+                <p class="page_nav">
+                    @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"]))
+                </p>
+            </div>
+        }
+
+    </div>
+
+    <!--显示详细内容--->
+    <div class="detailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>会议室名</td><td><span id="Name"></span></td></tr>
+            <tr><td>容纳人数</td><td><span id="HoldPerson"></span></td></tr>
+            <tr><td>会议室地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>状态</td><td><span id="Status"></span></td></tr>
+            <tr><td>描述</td><td><span id="Describe"></span></td></tr>
+            <tr><td>图片</td><td><img id="Picture" /></td>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+    <!--添加内容--->
+    <div class="addDiv" style="overflow:hidden;">
+        <iframe id="addFrame" frameborder="0" width="100%" height="100%" scrolling="auto" src="" />
+    </div>
+    <!--添加内容结束--->
+
+</body>
+</html>

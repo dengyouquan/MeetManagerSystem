@@ -1,0 +1,325 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Common
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MeetApply</title>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".detailDiv").css("display", "none");
+            $(".detail").click(function () {
+                showDetail($(this).attr("ids"));
+            });
+            $(".save").click(function () {
+                SaveInfo($(this).attr("ids"), $(this));
+            });
+            $(".pass").click(function () {
+                PassInfo($(this).attr("ids"), $(this));
+            });
+            $(".delete").click(function () {
+                deleteInfo($(this).attr("ids"), $(this));
+            });
+            $(".memodetailDiv").css("display", "none");
+            $(".memodetail").click(function () {
+                showMemoDetail($(this).attr("ids"));
+            });
+        });
+        function showMemoDetail(id) {
+            $.post("/Meet/MeetMemoDetail", { "id": id }, function (data) {
+                $("#Name").text("");
+                $("#MemoContent").html("");
+                $("#Recorder").text("");
+
+                $("#Name").text(data.Name);
+                $("#MemoContent").html(data.Content);
+                $("#Recorder").text(data.Recorder);
+            });
+            $(".memodetailDiv").css("display", "block");
+            $(".memodetailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "纪要详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.memodetailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+        function SaveInfo(id, control) {
+            $.messager.confirm("提示", "确定要归档纪要吗？", function (r) {
+                if (r) {
+                    //删除
+                    $.post("/Meet/Save", { "id": id }, function (data) {
+                        if (data == "ok") {
+                            $(control).parent().parent().remove();
+                            $.messager.show({
+                                title: '提示',
+                                msg: '归档成功',
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.alert("提示", "归档失败", "info");
+                        }
+                    });
+
+                } else {
+
+                }
+            });
+        }
+
+        function PassInfo(id, control) {
+            $.messager.confirm("提示", "确定要丢弃纪要吗？", function (r) {
+                if (r) {
+                    //删除
+                    $.post("/Meet/Pass", { "id": id }, function (data) {
+                        if (data == "ok") {
+                            $(control).parent().parent().remove();
+                            $.messager.show({
+                                title: '提示',
+                                msg: '丢弃成功',
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.alert("提示", "丢弃失败", "info");
+                        }
+                    });
+
+                } else {
+
+                }
+            });
+        }
+
+        function showDetail(id) {
+            $.post("/Meet/MeetDetail", { "id": id }, function (data) {
+                $("#Title").text("");
+                $("#Type").text("");
+                $("#Content").html("");
+                $("#StartTime").text("");
+                $("#EndTime").text("");
+                $("#Address").text("");
+                $("#IsEnd").html("");
+
+
+                $("#Title").text(data.Title);
+                $("#Type").text(data.Type);
+                $("#Content").html(data.Content);
+                $("#StartTime").text(ChangeDateFormat(data.StartTime));
+                $("#EndTime").text(ChangeDateFormat(data.EndTime));
+                $("#Address").text(data.Address);
+                $("#IsEnd").html(data.IsEnd == false ? "未结束" : "结束");
+            });
+            $(".detailDiv").css("display", "block");
+            $(".detailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议详情",
+                width: 400,
+                height: 300,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.detailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        function deleteInfo(id, control) {
+            $.messager.confirm("提示", "确定要删除该纪要吗？", function (r) {
+                if (r) {
+                    //删除
+                    $.post("/Meet/DeleteMsg", { "id": id }, function (data) {
+                        if (data == "ok") {
+                            $(control).parent().parent().remove();
+                            $.messager.show({
+                                title: '提示',
+                                msg: '删除成功',
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.alert("提示", "删除失败", "info");
+                        }
+                    });
+
+                } else {
+
+                }
+            });
+        }
+
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+    </script>
+</head>
+<body>
+    <div>
+        @*<div style="font-size:large">未归档会议</div><br /><br />
+        @if (ViewData["meets"] == null || ((List<Meet>)ViewData["meets"]).Count == 0)
+        {
+            <p>暂无任何可归档纪要，好好休息一会吧</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议标题</th>
+                        <th>会议类型</th>
+                        <th>会议内容</th>
+                        <th>会议开始时间</th>
+                        <th>会议地址</th>
+                        <th>归档</th>
+                        <th>丢弃</th>
+                    </tr>
+                    @foreach (Meet m in (List<Meet>)ViewData["meets"])
+                    {
+                        <tr>
+                            <td>@m.Title</td>
+                            <td>@m.Type</td>
+                            <td>@m.Content</td>
+                            <td>@m.StartTime</td>
+                            <td>@m.Address</td>
+                            <td><a href="#" class="save" ids="@m.MeetId">归档</a></td>
+                            <td><a href="#" class="pass" ids="@m.MeetId">丢弃</a></td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+        <div style="font-size:large">已归档纪要</div><br /><br />
+        @if (ViewData["meetsok"] == null || ((List<Meet>)ViewData["meetsok"]).Count == 0)
+        {
+            <p>暂无任何已归档纪要</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议标题</th>
+                        <th>会议类型</th>
+                        <th>会议内容</th>
+                        <th>会议开始时间</th>
+                        <th>会议地址</th>
+                        <th>归档结果</th>
+                        <th>详细</th>
+                    </tr>
+                    @foreach (Meet m in (List<Meet>)ViewData["meetsok"])
+                    {
+                        <tr>
+                            <td>@m.Title</td>
+                            <td>@m.Type</td>
+                            <td>@m.Content</td>
+                            <td>@m.StartTime</td>
+                            <td>@m.Address</td>
+                            @if (m.Status == 2)
+                            {
+                                <td>未归档</td>
+                            }
+                            else if (m.Status == 3)
+                            {
+                                <td>归档成功</td>
+                            }
+                            else if (m.Status == -2)
+                            {
+                                <td>归档失败</td>
+                            }
+                            <td><a href="#" class="detail" ids="@m.MeetId">详细</a></td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }*@
+
+        <div style="font-size:large">未归档纪要</div><br /><br />
+        @if (ViewData["meetMsgs"] == null || ((List<MeetMsg>)ViewData["meetMsgs"]).Count == 0)
+        {
+            <p>暂无任何可归档纪要，好好休息一会吧</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>纪要标题</th>
+                        @*<th>纪要内容</th>*@
+                        <th>会议详情</th>
+                        <th>纪要详情</th>
+                        <th>归档</th>
+                        <th>丢弃</th>
+                    </tr>
+                    @foreach (MeetMsg m in (List<MeetMsg>)ViewData["meetMsgs"])
+                    {
+                        <tr>
+                            <td>@m.Name</td>
+                            @*<td>@m.Content</td>*@
+
+                            <td><a href="#" class="detail" ids="@m.MeetMsgId">会议详情</a></td>
+                            <td><a href="#" class="memodetail" ids="@m.MeetMsgId">纪要详情</a></td>
+                            <td><a href="#" class="save" ids="@m.MeetMsgId">归档</a></td>
+                            <td><a href="#" class="pass" ids="@m.MeetMsgId">丢弃</a></td>
+                        </tr>
+                    }
+                </table>
+
+                <p class="page_nav">
+                    @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"], (string)ViewData["id"]))
+                </p>
+            </div>
+        }
+        
+    </div>
+    <!--显示详细内容--->
+    <div class="memodetailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>ID</td><td><span id="Recorder"></span></td></tr>
+            <tr><td>标题</td><td><span id="Name"></span></td></tr>
+            <tr><td>内容</td><td><span id="MemoContent"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+
+    <!--显示详细内容--->
+    <div class="detailDiv" style="overflow:hidden;">
+        <table>
+            <tr><td>标题</td><td><span id="Title"></span></td></tr>
+            <tr><td>类型</td><td><span id="Type"></span></td></tr>
+            <tr><td>内容</td><td><span id="Content"></span></td></tr>
+            <tr><td>开始时间</td><td><span id="StartTime"></span></td></tr>
+            <tr><td>结束时间</td><td><span id="EndTime"></span></td></tr>
+            <tr><td>地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>是否结束</td><td><span id="IsEnd"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+
+</body>
+</html>

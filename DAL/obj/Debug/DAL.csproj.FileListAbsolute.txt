@@ -1,0 +1,16 @@
+E:\vs2013\MeetManagerSystem\DAL\obj\Debug\DAL.csprojResolveAssemblyReference.cache
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\DAL.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\DAL.pdb
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\EntityFramework.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\EntityFramework.SqlServer.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Model.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Model.pdb
+E:\vs2013\MeetManagerSystem\DAL\obj\Debug\DAL.dll
+E:\vs2013\MeetManagerSystem\DAL\obj\Debug\DAL.pdb
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\EntityFramework.xml
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\EntityFramework.SqlServer.xml
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Microsoft.QualityTools.Testing.Fakes.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\zh-Hans\Microsoft.QualityTools.Testing.Fakes.resources.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Autofac.dll
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Autofac.xml
+E:\vs2013\MeetManagerSystem\DAL\bin\Debug\Newtonsoft.Json.dll

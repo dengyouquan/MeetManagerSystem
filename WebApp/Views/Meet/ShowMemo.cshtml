@@ -1,0 +1,94 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Microsoft.AspNet.Identity
+@using System.Web.Security
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+@Scripts.Render("~/bundles/ajax")
+@Styles.Render("~/Content/KinderEditor")
+@Scripts.Render("~/bundles/KinderEditor")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>ShowApply</title>
+    <script type="text/javascript">
+        $(function () {
+            var userId = $("#userId").text();
+            $("#Recorder").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+            bindClick();
+
+        });
+        KindEditor.ready(function (K) {
+            var editor1 = K.create('#MsgContent', {
+                cssPath: '/KinderEditor/plugins/code/prettify.css',
+                uploadJson: '/KinderEditor/asp.net/upload_json.ashx',
+                fileManagerJson: '/KinderEditor/asp.net/file_manager_json.ashx',
+                allowFileManager: true,
+                afterBlur: function () { this.sync(); },//注意这里（异步提交时需要同步）
+                afterCreate: function () {
+                    var self = this;
+                    self.sync();//把富文本编辑器的内容放到  文本域里面去。
+
+                }
+            });
+            prettyPrint();//注意要调用该方法.
+        });
+        //提交表单
+        function SubForm() {
+            $("#memoForm").submit();
+        }
+        function afterMemo(data) {
+            window.parent.afterMemo(data);
+        }
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @using (Ajax.BeginForm("Memo", "Meet", new AjaxOptions() { HttpMethod = "post", OnSuccess = "afterMemo" }, new { id = "memoForm", enctype = "multipart/form-data" }))
+        {
+            if (ViewData["meetMsg"] == null)
+            {
+                <table>
+                    <tr><td>纪要标题</td><td><input type="text" name="Name" /></td></tr>
+                    <tr>
+                        <td>纪要内容</td>
+                        <td>
+                            <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Content"></textarea>
+                            <input type="hidden" id="Recorder" name="Recorder" />
+                            <input type="hidden" id="MeetId" name="Other" value="@ViewData["id"]" />
+                            <input type="hidden" id="MeetMsgId" name="MeetMsgId" value="@ViewData["MeetMsgId"]" />
+                        </td>
+                    </tr>
+                </table>
+            }
+            else
+            {
+                <table>
+                    <tr><td>纪要标题</td><td><input type="text" name="Name" value="@ViewData["Name"]" /></td></tr>
+                    <tr>
+                        <td>纪要内容</td>
+                        <td>
+                            <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Content">@ViewData["Content"]</textarea>
+                            <input type="hidden" id="Recorder" name="Recorder" />
+                            <input type="hidden" id="MeetId" name="Other" value="@ViewData["id"]" />
+                            <input type="hidden" id="MeetMsgId" name="MeetMsgId" value="@ViewData["MeetMsgId"]" />
+                        </td>
+                    </tr>
+                </table>
+            }
+        }
+    </div>
+</body>
+</html>

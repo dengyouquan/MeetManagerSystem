@@ -1,0 +1,161 @@
+﻿@{
+    Layout = null;
+}
+@using Microsoft.AspNet.Identity
+@using System.Web.Security
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+@Scripts.Render("~/bundles/ajax")
+@Styles.Render("~/Content/KinderEditor")
+@Scripts.Render("~/bundles/KinderEditor")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>ShowApply</title>
+    <script type="text/javascript">
+        $(function () {
+            var userId = $("#userId").text();
+            $("#Applyer").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+            bindFileUpload();
+            //alert(userId);
+        });
+        KindEditor.ready(function (K) {
+            var editor1 = K.create('#MsgContent', {
+                cssPath: '/KinderEditor/plugins/code/prettify.css',
+                uploadJson: '/KinderEditor/asp.net/upload_json.ashx',
+                fileManagerJson: '/KinderEditor/asp.net/file_manager_json.ashx',
+                allowFileManager: true,
+                afterBlur: function () { this.sync(); },//注意这里（异步提交时需要同步）
+                afterCreate: function () {
+                    var self = this;
+                    self.sync();//把富文本编辑器的内容放到  文本域里面去。
+
+                }
+            });
+            prettyPrint();//注意要调用该方法.
+        });
+        function bindFileUpload() {
+
+            $("#btnFileUp").click(function () {
+                if ($("#imgIcon").val() == "") {
+                    $.messager.alert("提示", "请选择文件");
+                    return;
+                }
+                //alert("bindFileUpload");
+                $("#addForm").ajaxSubmit({
+                    type: 'post',
+                    url: '/Meet/FileUpload',
+                    success: function (data) {
+                        //alert("success");
+                        var serverData = data.split(':');
+                        if (serverData[0] == "ok") {
+                            //alert(serverData[1]);
+                            $("#fileUpImage").attr("value", serverData[1]);//将服务端返回的图片路径赋给隐藏域
+                            $("#showImage").append("<span>上传成功</span>");
+                        } else {
+                            $.messager.alert("提示", "文件上传错误!");
+                        }
+                    }
+                });
+            });
+            return false;
+        }
+        //提交表单
+        function SubForm() {
+            $("#addForm").submit();
+        }
+        function afterAddRoom(data) {
+            window.parent.afterAddRoom(data);
+        }
+    </script>
+    <style>
+        img{
+            width:100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @using (Ajax.BeginForm("Add", "MeetRoom", new AjaxOptions() { HttpMethod = "post", OnSuccess = "afterAddRoom" }, new { id = "addForm", enctype = "multipart/form-data" }))
+        {
+            if (ViewData["meetRoom"] == null)
+            {
+                <table>
+                    <tr><td>会议室名</td><td><input type="text" name="Name" /></td></tr>
+                    <tr><td>容纳人数</td><td><input type="text" name="HoldPerson" /></td></tr>
+                    <tr><td>会议室地址</td><td><input type="text" name="Address" /></td></tr>
+                    <tr>
+                        <td>上传图片</td>
+                        <td>
+                            <input type="file" name="fileUp" id="imgIcon" />
+                            <input type="button" value="上传图片" id="btnFileUp" />
+                            <input type="hidden" id="fileUpImage" name="Picture" />
+                            <div id="showImage">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>描述</td>
+                        <td>
+                            <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Describe"></textarea>
+                        </td>
+
+                    </tr>
+                </table>
+            }
+            else
+            {
+                <table>
+                    <tr><td>会议室名字</td><td><input type="text" name="Name" value="@ViewData["Name"]" /></td></tr>
+                    <tr><td>容纳人数</td><td><input type="text" name="HoldPerson" value="@ViewData["HoldPerson"]" /></td></tr>
+                    <tr><td>会议室地址</td><td><input type="text" name="Address" value="@ViewData["Address"]" /></td></tr>
+                    <tr>
+                        <td>上传图片</td>
+                        <td>
+
+                            <input type="hidden" id="MeetRoomId" name="MeetRoomId" value="@ViewData["MeetRoomId"]" />
+                            <input type="file" name="fileUp" id="imgIcon" />
+                            <input type="button" value="上传图片" id="btnFileUp" />
+                            <div id="showImage">
+                                @if (ViewData["Picture"]!=null && !String.IsNullOrEmpty(ViewData["Picture"].ToString()))
+                                {
+                                    <img src="@ViewData["Picture"]" />
+                                <input type="hidden" id="fileUpImage" name="Picture" value="@ViewData["Picture"]"/>
+                                }
+                                else
+                                {
+                                    <input type="hidden" id="fileUpImage" name="Picture" disabled />
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>描述</td>
+                        <td>
+                            @{
+                                string str = @ViewData["Describe"].ToString();
+                                MvcHtmlString html = new MvcHtmlString(str);
+                            }
+                            @*<p>@MvcHtmlString.Create(@ViewData["Describe"].ToString())</p>*@
+                            <textarea id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Describe">@html</textarea>
+                           
+                        </td>
+
+                    </tr>
+                </table>
+            }
+
+        }
+    </div>
+</body>
+</html>

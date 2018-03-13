@@ -1,0 +1,165 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+@using WebApp.Models;
+@using Microsoft.AspNet.Identity;
+<style type="text/css">
+    #tt .tabs-panels > .panel > .panel-body {
+        overflow: hidden;
+    }
+</style>
+
+<script type="text/javascript">
+    $(function () {
+        bindClickEvent();
+        startNotice();
+        var identityId = $("#identityId").text();
+        $("#MeetApply").attr("url", "/Meet/MeetApply?id=" + identityId);
+        $("#MeetManager").attr("url", "/Meet/MeetManager?id=" + identityId);
+        $("#MeetExamine").attr("url", "/Meet/MeetExamine?id=" + identityId);
+        $("#MeetNotice").attr("url", "/Meet/MeetNotice?id=" + identityId);
+        $("#MeetMemo").attr("url", "/Meet/MeetMemo?id=" + identityId);
+        $("#MeetSave").attr("url", "/Meet/MeetSave?id=" + identityId);
+        $("#ExaminedMeet").attr("url", "/Meet/ExaminedMeet?id=" + identityId);
+        $("#MemoedMeet").attr("url", "/Meet/MemoedMeet?id=" + identityId);
+        $("#SavedMeet").attr("url", "/Meet/SavedMeet?id=" + identityId);
+        //alert(identityId);
+    });
+    function afterLogin(data) {
+        if (data == "ok") {
+            //location.reload();
+            window.location.reload();
+        }
+    }
+    function updateTab(url) {
+        alert("updateTab");
+        var tab = $('#tt').tabs('getSelected');
+
+        $("#tt").tabs('update', {
+            tab: tab,
+            options: {
+
+                href: url
+            }
+        });
+        tab.panel('refresh');
+
+    }
+    function closeAddTab(url,title) {
+        var tab = $('#tt').tabs('getSelected');//获取当前选中tabs  
+        var index = $('#tt').tabs('getTabIndex', tab);//获取当前选中tabs的index  
+        $('#tt').tabs('close', index);//关闭对应index的tabs  
+        $('#tt').tabs('add', {
+            title: title,
+            content: showContent(url),
+            closable: true
+        });
+    }
+    function startNotice() {
+        var title = $("#MeetNotice").text();
+        var url = $("#MeetNotice").attr("url");
+        $('#tt').tabs('add', {
+            title: title,
+            content: showContent(url),
+            closable: true
+        });
+    }
+    function bindClickEvent() {
+        $(".clicklink").click(function () {
+            var title = $(this).text();
+            var url = $(this).attr("url");
+            var isExists = $("#tt").tabs("exists", title);//判断页签是否存在
+            if (isExists) {
+                $("#tt").tabs("select", title);
+                closeAddTab(url, title);
+                return;
+            }
+            //alert(url);
+            $('#tt').tabs('add', {
+                title: title,
+                content: showContent(url),
+                closable: true
+            });
+        });
+    }
+    function showContent(url) {
+        var html = '<iframe src="' + url + '" scrolling="auto" width="100%" height="100%" frameborder="0" overflow="hidden"></iframe>';
+        return html;
+    }
+    function removePanel() {
+        var tab = $('#tt').tabs('getSelected');
+        if (tab) {
+            var index = $('#tt').tabs('getTabIndex', tab);
+            $('#tt').tabs('close', index);
+        }
+    }
+
+</script>
+<!--上边布局-->
+<div data-options="region:'north',border:false" style="height: 70px; background: #B3DFDA; padding: 10px; overflow: hidden;text-align:center;">
+    @Html.ActionLink("会议管理系统", "Index", "Home")
+    @Html.Partial("_LoginPartial")
+</div>
+<!--左边布局-->
+<div data-options="region:'west',split:true,title:'管理'" style="width:150px;padding:10px;">
+    <div class="easyui-accordion" data-options="multiple:true" style="width:auto;">
+        
+        @if (User.IsInRole("apply") || User.IsInRole("admin"))
+        {
+            <div title="会议申请" style="padding:10px;">
+                <a href="#" class="clicklink" id="MeetApply" url="/Meet/MeetApply">会议申请</a><br /><br />
+                <a href="#" class="clicklink" id="MeetManager" url="/Meet/MeetManager">会议管理</a><br />
+            </div>
+        }
+        @if (User.IsInRole("examine") || User.IsInRole("admin"))
+{
+            <div title="会议审核" style="padding: 10px;">
+                <a href="#" class="clicklink" id="MeetExamine" url="/Meet/MeetExamine">未审核会议</a><br /><br />
+                <a href="#" class="clicklink" id="ExaminedMeet" url="/Meet/ExaminedMeet">已审核会议</a><br />
+            </div>
+        }
+        <div title="会议通知" style="padding: 10px;">
+            <a href="#" class="clicklink" id="MeetNotice" url="/Meet/MeetNotice">会议通知</a><br />
+        </div>
+        
+         @if (User.IsInRole("memo") || User.IsInRole("admin"))
+        {
+            <div title="会议纪要" style="padding: 10px;">
+                <a href="#" class="clicklink" id="MeetMemo" url="/Meet/MeetMemo">未纪要会议</a><br /><br />
+                <a href="#" class="clicklink" id="MemoedMeet" url="/Meet/MemoedMeet">已纪要会议</a>
+            </div>
+        }
+        
+        
+        @if (User.IsInRole("admin"))
+        {
+            <div title="会议归档" style="padding: 10px; ">
+                <a href="#" class="clicklink" id="MeetSave" url="/Meet/MeetSave">未归档会议</a><br /><br />
+                <a href="#" class="clicklink" id="SavedMeet" url="/Meet/SavedMeet">已归档会议</a>
+            </div>
+        }
+        @if (User.IsInRole("admin"))
+        {
+            <div title="会议室管理" style="padding: 10px;">
+                <a href="#" class="clicklink" url="/MeetRoom/Index">会议室</a>
+            </div>
+        }
+        <div title="会议查询" style="padding: 10px;">
+            <a href="#" class="clicklink" url="/Meet/Index">全部会议查询</a><br /><br />
+            <a href="#" class="clicklink" url="/Meet/OccurMeetQuery">已开会议查询</a><br /><br />
+            <a href="#" class="clicklink" url="/Meet/WaitMeetQuery">待开会议查询</a><br /><br />
+            <a href="#" class="clicklink" url="/Meet/MeetMsg">会议纪要查询</a><br /><br />
+            <a href="#" class="clicklink" url="/Meet/ExamineQuery">审核内容查询</a>
+        </div>
+    </div>
+</div>
+<!--中间布局-->
+<div data-options="region:'center',title:'详细内容'">
+    <div id="tt" class="easyui-tabs" data-options="tools:'#tab-tools'" style="width:auto;height:auto" fit="true">
+
+    </div>
+</div>
+<!--右边布局-->
+<div data-options="region:'east',split:true,collapsed:true,title:'East'" style="width:100px;padding:10px;">east region</div>
+
+

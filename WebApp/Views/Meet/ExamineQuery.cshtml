@@ -1,0 +1,226 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Microsoft.AspNet.Identity
+@using System.Web.Security
+@using Common
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+<!DOCTYPE html>
+<script type="text/javascript">
+    $(function () {
+        var userId = $("#userId").text();
+        $("#IsAuthenticated").css("display", "none");
+        $(".detailDiv").css("display", "none");
+        $(".detail").click(function () {
+            showDetail($(this).attr("ids"));
+        });
+
+        $(".delete").click(function () {
+            deleteInfo($(this).attr("ids"), $(this));
+        });
+
+        $(".exdetailDiv").css("display", "none");
+        $(".exdetail").click(function () {
+            showExaDetail($(this).attr("ids"));
+        });
+    });
+
+        function showExaDetail(id) {
+            $.post("/Meet/MeetExamineDetail", { "id": id }, function (data) {
+                $("#ExaminePeople").text("");
+                $("#ExaContent").html("");
+                $("#Time").text("");
+
+                $("#ExaminePeople").text(data.ExaminePeople);
+                $("#ExaContent").html(data.Content);
+                $("#Time").text(ChangeDateFormat(data.Time));
+            });
+            $(".exdetailDiv").css("display", "block");
+            $(".exdetailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "审核详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.exdetailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+    function deleteInfo(id, control) {
+        $.messager.confirm("提示", "确定要删除该记录吗？", function (r) {
+            if (r) {
+                //删除
+                $.post("/Meet/DeleteExamine", { "id": id }, function (data) {
+                    if (data == "ok") {
+                        $(control).parent().parent().remove();
+                        $.messager.show({
+                            title: '提示',
+                            msg: '删除成功',
+                            showType: 'show'
+                        });
+                    } else {
+                        $.messager.alert("提示", "删除失败", "info");
+                    }
+                });
+
+            } else {
+
+            }
+        });
+    }
+
+    function showDetail(id) {
+        $.post("/Meet/MeetDetail", { "id": id }, function (data) {
+            $("#Title").text("");
+            $("#Type").text("");
+            $("#Content").html("");
+            $("#StartTime").text("");
+            $("#EndTime").text("");
+            $("#Address").text("");
+            $("#IsEnd").html("");
+
+            $("#Title").text(data.Title);
+            $("#Type").text(data.Type);
+            $("#Content").html(data.Content);
+            $("#StartTime").text(ChangeDateFormat(data.StartTime));
+            $("#EndTime").text(ChangeDateFormat(data.EndTime));
+            $("#Address").text(data.Address);
+            $("#IsEnd").html(data.IsEnd == false ? "未结束" : "结束");
+        });
+        $(".detailDiv").css("display", "block");
+        $(".detailDiv").dialog({
+            modal: true,
+            resizable: true,
+            maximizable: true,
+            collapsiable: true,
+            title: "会议详情",
+            width: 700,
+            height: 350,
+            buttons: [{
+                text: '确定',
+                iconCls: 'icon-ok',
+                handler: function () {
+                    $('.detailDiv').dialog("close", true);
+                }
+            }]
+        }
+       );
+    }
+
+</script>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script type="text/javascript">
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @using (Html.BeginForm())
+        {
+            <p>
+                @*type:@Html.DropDownList("meetType","All")*@
+                Title or Content:@Html.TextBox("searchString")<br />
+                @*Title or Content:<input type="text" value="@ViewData["searchString"]" />*@
+                <input type="submit" value="搜索" />
+            </p>
+        }
+    </div>
+    @if (ViewData["examines"] == null || ((List<Examine>)ViewData["examines"]).Count == 0)
+    {
+        <p>暂无任何会议，去申请一个吧</p>
+    }
+    else
+    {
+        <div>
+            <table width="100%">
+                <tr>
+                    <th>审核人ID</th>
+                    @*<th>审核内容</th>*@
+                    <th>状态</th>
+                    <th>审核详情</th>
+                    <th>会议详情</th>
+                    @if (User.IsInRole("admin"))
+                    {
+                        <th>删除</th>
+                    }
+                </tr>
+                @foreach (Examine e in (List<Examine>)ViewData["examines"])
+                {
+                    <tr>
+                        <td>@e.ExaminePeople</td>
+                        @*<td>@e.Content</td>*@
+                        @if (e.Status == -1)
+                        {
+                            
+                        <td>审核未通过</td>
+                        }
+                        else
+                        {
+                          
+                            <td>审核通过</td>
+                        }
+                        <td><a href="#" class="exdetail" ids="@e.ExamineId">审核详情</a></td>
+                        <td><a href="#" class="detail" ids="@e.ExamineId">会议详请</a></td>
+                        @if (User.IsInRole("admin"))
+                        {
+                            <td><a href="#" class="delete" ids="@e.ExamineId">删除</a></td>
+                        }
+                    </tr>
+                }
+            </table>
+            <p class="page_nav">
+                @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"], "", (string)ViewData["searchString"]))
+            </p>
+        </div>
+    }
+    <!--显示详细内容--->
+    <div class="exdetailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>ID</td><td><span id="ExaminePeople"></span></td></tr>
+            <tr><td>内容</td><td><span id="ExaContent"></span></td></tr>
+            <tr><td>时间</td><td><span id="Time"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+
+    <!--显示详细内容--->
+    <div class="detailDiv">
+        <table>
+            <tr><td>标题</td><td><span id="Title"></span></td></tr>
+            <tr><td>类型</td><td><span id="Type"></span></td></tr>
+            <tr><td>内容</td><td><span id="Content"></span></td></tr>
+            <tr><td>开始时间</td><td><span id="StartTime"></span></td></tr>
+            <tr><td>结束时间</td><td><span id="EndTime"></span></td></tr>
+            <tr><td>地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>是否结束</td><td><span id="IsEnd"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+</body>
+</html>

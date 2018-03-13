@@ -1,0 +1,119 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Microsoft.AspNet.Identity
+@using System.Web.Security
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+@Scripts.Render("~/bundles/ajax")
+@Styles.Render("~/Content/KinderEditor")
+@Scripts.Render("~/bundles/KinderEditor")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>ShowApply</title>
+    <script type="text/javascript">
+        $(function () {
+            var userId = $("#userId").text();
+            $("#ExaminePeople").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+            bindClick();
+            
+        });
+        KindEditor.ready(function (K) {
+            var editor1 = K.create('#MsgContent', {
+                cssPath: '/KinderEditor/plugins/code/prettify.css',
+                uploadJson: '/KinderEditor/asp.net/upload_json.ashx',
+                fileManagerJson: '/KinderEditor/asp.net/file_manager_json.ashx',
+                allowFileManager: true,
+                afterBlur: function () { this.sync(); },//注意这里（异步提交时需要同步）
+                afterCreate: function () {
+                    var self = this;
+                    self.sync();//把富文本编辑器的内容放到  文本域里面去。
+
+                }
+            });
+            var editor1 = K.create('#ExaContent', {
+                cssPath: '/KinderEditor/plugins/code/prettify.css',
+                uploadJson: '/KinderEditor/asp.net/upload_json.ashx',
+                fileManagerJson: '/KinderEditor/asp.net/file_manager_json.ashx',
+                allowFileManager: true,
+                afterBlur: function () { this.sync(); },//注意这里（异步提交时需要同步）
+                afterCreate: function () {
+                    var self = this;
+                    self.sync();//把富文本编辑器的内容放到  文本域里面去。
+
+                }
+            });
+            prettyPrint();//注意要调用该方法.
+        });
+        //提交表单
+        function SubForm() {
+            $("#examineForm").submit();
+        }
+        function afterExamine(data) {
+            window.parent.afterExamine(data);
+        }
+        function bindClick() {
+            $(".examineno").click(function () {
+                //alert("examineno");
+                $("#Status").val(-1);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @*@if (m = ViewData["meet"] != null){*@
+            @using (Ajax.BeginForm("Examine", "Meet", new AjaxOptions() { HttpMethod = "post", OnSuccess = "afterExamine" }, new { id = "examineForm", enctype = "multipart/form-data" }))
+            {
+                <table>
+                <tr><td>会议标题</td><td><input type="text" name="Title" disabled="true" value="@ViewData["Title"]" /></td></tr>
+                <tr><td>会议类型</td><td><input type="text" name="Type" disabled="true" value="@ViewData["Type"]" /></td></tr>
+                <tr><td>主持人</td><td><input type="text" name="HostPeople" disabled="true" value="@ViewData["HostPeople"]" /></td></tr>
+                <tr><td>预算</td><td><input type="text" name="Budget" disabled="true" value="@ViewData["Budget"]" /></td></tr>
+                <tr><td>地址</td><td><input type="text" name="Address" disabled="true" value="@ViewData["Address"]" /></td></tr>
+                <tr><td>开始时间</td><td><input type="text" name="StartTime" disabled="true" value="@ViewData["StartTime"]" /></td></tr>
+                <tr><td>结束时间</td><td><input type="text" name="EndTime" disabled="true" value="@ViewData["EndTime"]" /></td></tr>
+                <tr>
+                    <td>内容</td>
+                    <td>
+                        <textarea disabled="true" id="MsgContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="c">"@ViewData["Content"]</textarea>
+                    </td>
+
+                </tr>
+                    <tr>
+                    <tr><td>审核通过</td>
+                    <td>
+                        <input type="radio" class="examineok" name="radio" value="1" checked />审核通过
+                        <input type="radio" class="examineno" name="radio" value="-1" />审核未通过
+                        <input type="hidden" id="Status" name="Roles" value="1" />
+                    </td></tr>
+                    <td>审核内容</td>
+                    <td>
+                        <textarea id="ExaContent" cols="100" rows="8" style="width: 500px; height: 200px; " name="Content"></textarea>
+                    </td>
+                    <input type="hidden" id="ExaminePeople" name="ExaminePeople" />
+                    
+                    <input type="hidden" id="MeetId" name="Other" value="@ViewData["id"]" />
+                </tr>
+            </table>
+            }
+        @*}
+        else
+        {
+            <span>出现问题了</span>
+        }*@
+    </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\BLL.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\BLL.pdb
+E:\vs2013\MeetManagerSystem\BLL\obj\Debug\BLL.csprojResolveAssemblyReference.cache
+E:\vs2013\MeetManagerSystem\BLL\obj\Debug\BLL.dll
+E:\vs2013\MeetManagerSystem\BLL\obj\Debug\BLL.pdb
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\DAL.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\Model.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\EntityFramework.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\DAL.pdb
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\Model.pdb
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\EntityFramework.SqlServer.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\EntityFramework.xml
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\EntityFramework.SqlServer.xml
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\Autofac.dll
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\Autofac.xml
+E:\vs2013\MeetManagerSystem\BLL\bin\Debug\Newtonsoft.Json.dll

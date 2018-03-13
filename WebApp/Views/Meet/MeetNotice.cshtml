@@ -1,0 +1,143 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Common
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MeetNotice</title>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".detailDiv").css("display", "none");
+            $(".detail").click(function () {
+                showDetail($(this).attr("ids"));
+            });
+        });
+
+        
+        function showDetail(id) {
+            $.post("/Meet/MeetDetail", { "id": id }, function (data) {
+                $("#Title").text("");
+                $("#Type").text("");
+                $("#Content").html("");
+                $("#StartTime").text("");
+                $("#EndTime").text("");
+                $("#Address").text("");
+                $("#IsEnd").html("");
+
+                $("#Title").text(data.Title);
+                $("#Type").text(data.Type);
+                $("#Content").html(data.Content);
+                $("#StartTime").text(ChangeDateFormat(data.StartTime));
+                $("#EndTime").text(ChangeDateFormat(data.EndTime));
+                $("#Address").text(data.Address);
+                $("#IsEnd").html(data.IsEnd == false ? "未结束" : "结束");
+            });
+            $(".detailDiv").css("display", "block");
+            $(".detailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.detailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+    </script>
+</head>
+<body>
+    <div>
+        @if (ViewData["meet"] != null)
+        {
+        <div style="font-size: large;text-align:center;">
+            <p>近期会议</p>
+            @if (@ViewData["Title"] != null && @ViewData["StartTime"]!=null)
+            {
+                <p><span>标题:</span>@ViewData["Title"]   <span>开始时间:</span>@ViewData["StartTime"]  <span>地址:</span>@ViewData["Address"]</p>
+                <p><span>内容:</span>@MvcHtmlString.Create(@ViewData["Content"].ToString())</p>
+            }
+            else
+            {
+                <p>暂无近期会议</p>
+            }
+        </div>
+        }
+        <div style="font-size:large">近7天会议</div>
+        @if (ViewData["meets"] == null || ((List<Meet>)ViewData["meets"]).Count == 0)
+        {
+            <p>暂无任何会议，可以放松一下了</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议标题</th>
+                        <th>会议类型</th>
+                        @*<th>会议内容</th>*@
+                        <th>会议开始时间</th>
+                        <th>会议地址</th>
+                        <th>详细</th>
+                    </tr>
+                    @foreach (Meet m in (List<Meet>)ViewData["meets"])
+                    {
+                        <tr>
+                            <td>@m.Title</td>
+                            <td>@m.Type</td>
+                            @*<td>@m.Content</td>*@
+                            <td>@m.StartTime</td>
+                            <td>@m.Address</td>
+                            <td><a href="#" class="detail" ids="@m.MeetId">详细</a></td>
+                        </tr>
+                    }
+                </table>
+
+                <p class="page_nav">
+                    @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"], (string)ViewData["id"]))
+                </p>
+            </div>
+        }
+
+    </div>
+
+    <!--显示详细内容--->
+    <div class="detailDiv" style="overflow:hidden;">
+        <span>detailDiv</span>
+        <table>
+            <tr><td>标题</td><td><span id="Title"></span></td></tr>
+            <tr><td>类型</td><td><span id="Type"></span></td></tr>
+            <tr><td>内容</td><td><span id="Content"></span></td></tr>
+            <tr><td>开始时间</td><td><span id="StartTime"></span></td></tr>
+            <tr><td>结束时间</td><td><span id="EndTime"></span></td></tr>
+            <tr><td>地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>是否结束</td><td><span id="IsEnd"></span></td></tr>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+
+</body>
+</html>

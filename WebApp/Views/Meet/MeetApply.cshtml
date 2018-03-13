@@ -1,0 +1,232 @@
+﻿@{
+    Layout = null;
+}
+@using Model
+@using Common
+@using Microsoft.AspNet.Identity
+@Styles.Render("~/Content/table")
+@Styles.Render("~/Content/easyui")
+@Scripts.Render("~/bundles/easyui")
+@Styles.Render("~/Content/date")
+@Scripts.Render("~/bundles/date")
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MeetApply</title>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".addDiv").css("display", "none");
+            $(".apply").click(function () {
+                //alert("addInfo");
+                addInfo($(this).attr("ids"));
+            });
+            $(".detailDiv").css("display", "none");
+            $(".detail").click(function () {
+                showDetail($(this).attr("ids"));
+            });
+            var userId = $("#userId").text();
+            $("#ApplyPeople").val(userId);
+            $("#IsAuthenticated").css("display", "none");
+
+            $('.input_cxcalendar').each(function () {
+                var id = $(this).attr("ids");
+                //var days;
+                //$.post("/MeetRoom/GetUseTime", { "id": id }, function (data) {
+                //    days = data;
+                //});
+                var a = new Calendar({
+                    targetCls: $(this),
+                    type: 'yyyy-mm-dd',
+                    wday: 2
+                }, function (val) {
+                    
+                    $.post("/MeetRoom/TimeIsUsed", { "id": id, "time": val }, function (data) {
+                        if (data == null || data == "") {
+                            $.messager.show({
+                                title: '提示',
+                                msg: "今天无会议",
+                                showType: 'show'
+                            });
+                        } else {
+                            $.messager.show({
+                                title: '提示',
+                                msg: data,
+                                showType: 'show'
+                            });
+                        }
+                        
+                    });
+                });
+            });
+        });
+
+        function addInfo(id) {
+            $("#addFrame").attr("src", "/Meet/ShowApply");
+            $(".addDiv").css("display", "block");
+            $(".addDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议申请",
+                width: 700,
+                height: 400,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        //调用子窗体中的方法
+                        var childWindow = $("#addFrame")[0].contentWindow;
+                        childWindow.SubForm(id);
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('.addDiv').dialog("close", true);
+                    }
+                }]
+            });
+        }
+
+        //添加完成以后执行该方法
+        function afterApply(serverData) {
+            var data = serverData.split(':');
+            if (data[0] == "ok") {
+                $('.addDiv').dialog('close', true);
+                $.messager.show({
+                    title: '提示',
+                    msg: '申请成功',
+                    showType: 'show'
+                });
+                //location.reload();
+            }
+            else {
+                $.messager.show({
+                    title: '提示',
+                    msg: data[1],
+                    showType: 'show'
+                });
+            }
+        }
+
+        
+        function showDetail(id) {
+            $.post("/MeetRoom/MeetRoomDetail", { "id": id }, function (data) {
+                $("#Name").text("");
+                $("#HoldPerson").text("");
+                $("#Address").text("");
+                $("#Status").text("");
+                $("#Picture").attr("src", "");
+                $("#Describe").html("");
+
+
+                $("#Name").text(data.Name);
+                $("#HoldPerson").text(data.HoldPerson);
+                $("#Address").text(data.Address);
+                $("#Describe").html(data.Describe);
+
+                $("#Status").text(data.Status == 0 ? "未使用" : (data.Status == 1 ? "已预约" : "已使用"));
+                $("#Picture").attr("src", data.Picture);
+            });
+            $(".detailDiv").css("display", "block");
+            $(".detailDiv").dialog({
+                modal: true,
+                resizable: true,
+                maximizable: true,
+                collapsiable: true,
+                title: "会议室详情",
+                width: 700,
+                height: 350,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('.detailDiv').dialog("close", true);
+                    }
+                }]
+            }
+           );
+        }
+
+        //将序列化成json格式后日期(毫秒数)转成日期格式
+        function ChangeDateFormat(cellval) {
+            var date = new Date(parseInt(cellval.replace("/Date(", "").replace(")/", ""), 10));
+            var month = date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
+            var currentDate = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+            return date.getFullYear() + "-" + month + "-" + currentDate;
+        }
+    </script>
+</head>
+<body>
+    <div id="IsAuthenticated">
+        @if (Request.IsAuthenticated)
+        {
+            @Html.ActionLink(User.Identity.GetUserId(), null, null, routeValues: null, htmlAttributes: new { title = "管理", id = "userId" })
+        }
+    </div>
+    <div>
+        @*<a href="#" class="addInfo">会议申请</a><br /><br />*@
+        <div style="font-size:large">会议室</div><br /><br />
+        @if (ViewData["meetRooms"] == null || ((List<MeetRoom>)ViewData["meetRooms"]).Count == 0)
+        {
+            <p>暂无任何已申请会议，去申请一个吧</p>
+        }
+        else
+        {
+            <div>
+                <table width="100%">
+                    <tr>
+                        <th>会议室名</th>
+                        <th>容纳人数</th>
+                        <th>会议室地址</th>
+                        <th>详细</th>
+                        <th>已申请会议</th>
+                        <th>空闲时间</th>
+                        <th>申请</th>
+                    </tr>
+                    @foreach (MeetRoom m in (List<MeetRoom>)ViewData["meetRooms"])
+                    {
+                        <tr>
+                            <td>@m.Name</td>
+                            <td>@m.HoldPerson</td>
+                            <td>@m.Address</td>
+                            <td><a href="#" class="detail" ids="@m.MeetRoomId">详细</a></td>
+                            <td><a href="/Meet/ApplyedMeet?id=@m.MeetRoomId" class="applyedmeet" ids="@m.MeetRoomId">已申请会议</a></td>
+                            <td><input type="text" name="StartTime" class="input_cxcalendar" ids="@m.MeetRoomId" /></td>
+                            <td><a href="#" class="apply" ids="@m.MeetRoomId">申请</a></td>
+                        </tr>
+                    }
+                </table>
+                
+                <p class="page_nav">
+                    @MvcHtmlString.Create(PageBar.GetPageBar((int)ViewData["pageIndex"], (int)ViewData["pageCount"], (string)ViewData["id"]))
+                </p>
+            </div>
+        }
+
+    </div>
+
+    <!--显示详细内容--->
+    <div class="detailDiv" style="overflow:scroll;">
+        <table>
+            <tr><td>会议室名</td><td><span id="Name"></span></td></tr>
+            <tr><td>容纳人数</td><td><span id="HoldPerson"></span></td></tr>
+            <tr><td>会议室地址</td><td><span id="Address"></span></td></tr>
+            <tr><td>状态</td><td><span id="Status"></span></td></tr>
+            <tr><td>描述</td><td><span id="Describe"></span></td></tr>
+            <tr><td>图片</td><td><img id="Picture" /></td>
+        </table>
+    </div>
+    <!--显示详细内容结束--->
+    <!--添加内容--->
+    <div class="addDiv" style="overflow:hidden;">
+        <iframe id="addFrame" frameborder="0" width="100%" height="100%" scrolling="auto" src="" />
+    </div>
+    <!--添加内容结束--->
+
+</body>
+</html>

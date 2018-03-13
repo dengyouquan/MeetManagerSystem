@@ -1,0 +1,9 @@
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\Common.dll
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\Common.pdb
+E:\vs2013\MeetManagerSystem\Common\obj\Debug\Common.dll
+E:\vs2013\MeetManagerSystem\Common\obj\Debug\Common.pdb
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\EntityFramework.dll
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\EntityFramework.SqlServer.dll
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\EntityFramework.xml
+E:\vs2013\MeetManagerSystem\Common\bin\Debug\EntityFramework.SqlServer.xml
+E:\vs2013\MeetManagerSystem\Common\obj\Debug\Common.csprojResolveAssemblyReference.cache
